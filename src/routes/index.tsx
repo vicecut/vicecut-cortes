@@ -6,7 +6,8 @@ const PLAYER_SRC =
   "https://scripts.converteai.net/ad025f94-97fb-487a-9d36-7c139a6e8963/players/6afca30723042be373eb7af4/v4/player.js";
 
 const CHECKOUT_URL = "https://pay.cakto.com.br/gkhx4xk_1336725";
-const LAST_MINUTES_SECONDS = 3 * 60;
+// The sales video is 4:51 long; the link must show at the 4:00 mark.
+const CHECKOUT_AT_SECONDS = 4 * 60;
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -29,11 +30,11 @@ export const Route = createFileRoute("/")({
 });
 
 /**
- * Shows the checkout link during the last 3 minutes of the sales video.
+ * Shows the checkout link once the visitor reaches the 4:00 mark of the sales video.
  * The VTurb player swaps in its real <video> after the visitor interacts, so we
  * watch the DOM for a video with a real duration instead of trusting the first one.
  */
-function useLastMinutesReached() {
+function useCheckoutMomentReached() {
   const [reached, setReached] = useState(false);
 
   useEffect(() => {
@@ -43,10 +44,10 @@ function useLastMinutesReached() {
     const check = (v: HTMLVideoElement) => {
       const dur = v.duration;
       if (!isFinite(dur) || dur <= 0) return;
-      // Ignore the player's tiny pre-roll stub: only a video long enough to have
-      // a "last 3 minutes" can trigger the link.
-      if (dur <= LAST_MINUTES_SECONDS) return;
-      if (dur - v.currentTime <= LAST_MINUTES_SECONDS) setReached(true);
+      // Ignore the player's tiny pre-roll stub: only a video long enough to reach
+      // the 4:00 mark can trigger the link.
+      if (dur <= CHECKOUT_AT_SECONDS) return;
+      if (v.currentTime >= CHECKOUT_AT_SECONDS) setReached(true);
     };
 
     const attach = (v: HTMLVideoElement) => {
@@ -79,7 +80,7 @@ function useLastMinutesReached() {
 }
 
 function CheckoutBar() {
-  const show = useLastMinutesReached();
+  const show = useCheckoutMomentReached();
 
   if (!show) return null;
 
