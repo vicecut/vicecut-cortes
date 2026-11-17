@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createElement, useEffect } from "react";
+import { createElement, useEffect, useState } from "react";
 import bg from "@/assets/gta6-hero-background.jpg.asset.json";
 
 const PLAYER_SRC =
   "https://scripts.converteai.net/ad025f94-97fb-487a-9d36-7c139a6e8963/players/6afca30723042be373eb7af4/v4/player.js";
+
+const CHECKOUT_URL = "https://pay.cakto.com.br/gkhx4xk_1336725";
+const LAST_MINUTES_SECONDS = 3 * 60;
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,6 +27,80 @@ export const Route = createFileRoute("/")({
   }),
   component: Index,
 });
+
+/**
+ * Shows the checkout link during the last 3 minutes of the sales video.
+ * The VTurb player swaps in its real <video> after the visitor interacts, so we
+ * watch the DOM for a video with a real duration instead of trusting the first one.
+ */
+function useLastMinutesReached() {
+  const [reached, setReached] = useState(false);
+
+  useEffect(() => {
+    const watched = new WeakSet<HTMLVideoElement>();
+    let timer = 0;
+
+    const check = (v: HTMLVideoElement) => {
+      const dur = v.duration;
+      if (!isFinite(dur) || dur <= 0) return;
+      // Ignore the player's tiny pre-roll stub: only a video long enough to have
+      // a "last 3 minutes" can trigger the link.
+      if (dur <= LAST_MINUTES_SECONDS) return;
+      if (dur - v.currentTime <= LAST_MINUTES_SECONDS) setReached(true);
+    };
+
+    const attach = (v: HTMLVideoElement) => {
+      if (watched.has(v)) return;
+      watched.add(v);
+      const onUpdate = () => check(v);
+      v.addEventListener("timeupdate", onUpdate);
+      v.addEventListener("durationchange", onUpdate);
+      v.addEventListener("loadedmetadata", onUpdate);
+      v.addEventListener("ended", () => setReached(true));
+      check(v);
+    };
+
+    const scan = () => {
+      document.querySelectorAll("video").forEach((v) => attach(v as HTMLVideoElement));
+    };
+
+    const observer = new MutationObserver(scan);
+    observer.observe(document.body, { childList: true, subtree: true });
+    scan();
+    timer = window.setInterval(scan, 1500);
+
+    return () => {
+      observer.disconnect();
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  return reached;
+}
+
+function CheckoutBar() {
+  const show = useLastMinutesReached();
+
+  if (!show) return null;
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t-2 border-primary/60 bg-background/95 px-4 py-4 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-3xl flex-col items-center gap-2 text-center">
+        <p className="font-body text-sm text-foreground/80 sm:text-base">
+          Garanta sua vaga agora e comece a postar seus cortes hoje.
+        </p>
+        <a
+          href={CHECKOUT_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full max-w-md rounded-full bg-primary px-8 py-4 font-display text-xl uppercase tracking-wide text-primary-foreground shadow-[0_12px_40px_-8px_var(--primary)] transition-transform hover:scale-[1.03] sm:text-2xl"
+        >
+          Quero começar agora
+        </a>
+      </div>
+    </div>
+  );
+}
 
 function Index() {
   useEffect(() => {
@@ -58,6 +135,7 @@ function Index() {
           )}
         </div>
       </div>
+      <CheckoutBar />
     </main>
   );
 }
