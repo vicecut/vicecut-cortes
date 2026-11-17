@@ -45,13 +45,10 @@ function Index() {
           className="font-display uppercase leading-[0.92] text-foreground drop-shadow-[0_6px_24px_rgba(0,0,0,0.75)]"
           style={{ fontSize: "clamp(2.6rem, 8.5vw, 7rem)" }}
         >
-          💰 Crie e Poste <span className="text-primary">cortes todo dia</span> com apenas um clique e transforme <span className="text-primary">views em dinheiro</span>
+          Crie e Poste <span className="text-primary">cortes todo dia</span> com apenas um clique e transforme <span className="text-primary">views em dinheiro</span>
         </h1>
         <p className="mt-6 font-body text-xl font-semibold text-foreground/95 sm:text-2xl">
           Veja como fazer de <strong className="text-primary">R$ 3.000 a R$ 20.000 por mês</strong> com cortes de GTA 6.
-        </p>
-        <p className="mt-3 max-w-3xl font-body text-base text-foreground/75 sm:text-lg">
-          Aprenda a transformar lives de GTA em dezenas de cortes com apenas alguns cliques e faça sua conta viralizar como eu fiz.
         </p>
         <div className="mt-8 w-full max-w-[400px] overflow-hidden rounded-xl shadow-[0_20px_60px_-15px_var(--primary)] ring-2 ring-primary/60">
           {createElement(
